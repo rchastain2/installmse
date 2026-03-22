@@ -9,7 +9,7 @@
 - Configure *MSEide*
 - Create start script and desktop shortcuts
 
-The start script and the desktop shortcuts are created with **--globstatfile** option, in order that each *MSEide* binary installed by this program use its own configuration file
+The start script and the desktop shortcuts are created with **--globstatfile** option (so that each *MSEide* binary installed by this program use its own configuration file).
 
 ## Usage
 
@@ -25,7 +25,7 @@ Example:
 ./installmse --dir=/home/roland/Applications
 ```
 
-When the location is not specified, the folder is created in the current directory.
+If the location is not specified, the folder is created in the current directory.
 
 ## Compilation
 
@@ -43,7 +43,7 @@ make RELEASE=1
 
 ## Test
 
-To test the program (in passive mode):
+To test the program:
 
 ```Bash
 LC_ALL=C make distclean && make test

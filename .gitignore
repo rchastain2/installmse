@@ -1,7 +1,12 @@
-*.debug
+
 *.o
 *.ppu
+
+*.debug
+*.log
+
 *.desktop
 *.sh
+
 installmse
 installmse.exe 

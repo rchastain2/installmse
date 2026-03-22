@@ -9,7 +9,7 @@ Installateur *MSEide+MSEgui* pour la ligne de commande.
 - Configurer *MSEide*
 - Créer un script de lancement et des raccourcis
 
-Le script de lancement et les raccourcis sont créés avec l'option **--globstatfile**, afin que chaque binaire de *MSEide* installé utilise son propre fichier de configuration.
+Le script de lancement et les raccourcis sont créés avec l'option **--globstatfile** (en sorte que chaque binaire de *MSEide* installé utilise son propre fichier de configuration).
 
 ## Usage
 
@@ -22,7 +22,7 @@ Où **DIR** est l'emplacement du dossier *mseide-xxxxxxxxxx*.
 Exemple :
 
 ```Bash
-./installmse --dir=/home/roland/Applications
+./installmse --dir=/home/roland/Applications 2> installmse.debug
 ```
 
 Par défaut le dossier est créé dans le répertoire courant.
@@ -43,7 +43,7 @@ make RELEASE=1
 
 ## Essai
 
-Pour essayer le programme (en mode passif) :
+Pour essayer le programme :
 
 ```Bash
 make distclean && make test
