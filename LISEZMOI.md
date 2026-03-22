@@ -1,15 +1,15 @@
 # InstallMSE
 
-*MSEide+MSEgui* installer for command-line.
+Installateur *MSEide+MSEgui* pour la ligne de commande.
 
-## What it does
+## Ce qu'il fait
 
-- Clone *MSEide+MSEgui* *git* repository
-- Build *MSEide*
-- Configure *MSEide*
-- Create start script and desktop shortcuts
+- Cloner le dépôt *git* de *MSEide+MSEgui*
+- Compiler *MSEide*
+- Configurer *MSEide*
+- Créer un script de lancement et des raccourcis
 
-The start script and the desktop shortcuts are created with **--globstatfile** option, in order that each *MSEide* binary installed by this program use its own configuration file
+Le script de lancement et les raccourcis sont créés avec l'option **--globstatfile**, afin que chaque binaire de *MSEide* installé utilise son propre fichier de configuration.
 
 ## Usage
 
@@ -17,15 +17,15 @@ The start script and the desktop shortcuts are created with **--globstatfile** o
 ./installmse [--dir=DIR]
 ```
 
-Where **DIR** is the location of the folder *mseide-xxxxxxxxxx*.
+Où **DIR** est l'emplacement du dossier *mseide-xxxxxxxxxx*.
 
-Example:
+Exemple :
 
 ```Bash
 ./installmse --dir=/home/roland/Applications
 ```
 
-When the location is not specified, the folder is created in the current directory.
+Par défaut le dossier est créé dans le répertoire courant.
 
 ## Compilation
 
@@ -33,32 +33,32 @@ When the location is not specified, the folder is created in the current directo
 make
 ```
 
-By default the program is compiled in passive mode. (It will create the scripts but won't execute any command.)
+Par défaut l'installateur est compilé en mode passif. (Il créera les scripts mais ne lancera aucune commande.)
 
-To build in active mode:
+Pour compiler en mode actif :
 
 ```Bash
 make RELEASE=1
 ```
 
-## Test
+## Essai
 
-To test the program (in passive mode):
+Pour essayer le programme (en mode passif) :
 
 ```Bash
-LC_ALL=C make distclean && make test
+make distclean && make test
 ```
 
 ```
-removed 'mseide-2603221717.desktop'
-removed 'desktopfile.o'
-removed 'installmse.o'
-removed 'readversion.o'
-removed 'desktopfile.ppu'
-removed 'readversion.ppu'
-removed 'build-mseide-2603221717.sh'
-removed 'start-mseide-2603221717.sh'
-removed 'installmse'
+'mseide-2603221716.desktop' supprimé
+'desktopfile.o' supprimé
+'installmse.o' supprimé
+'readversion.o' supprimé
+'desktopfile.ppu' supprimé
+'readversion.ppu' supprimé
+'build-mseide-2603221716.sh' supprimé
+'start-mseide-2603221716.sh' supprimé
+'installmse' supprimé
 Free Pascal Compiler version 3.2.2 [2023/03/05] for x86_64
 Copyright (c) 1993-2021 by Florian Klaempfl and others
 Target OS: Linux for x86-64
@@ -74,7 +74,7 @@ Linking installmse
 320 lines compiled, 0.8 sec
 5 warning(s) issued
 ./installmse --dir=/home/roland/Applications 2> installmse.debug
-MSEinstall 0.2 (FPC 3.2.2 2026/03/22 17:18:15 Linux-x86_64)
+MSEinstall 0.2 (FPC 3.2.2 2026/03/22 17:17:02 Linux-x86_64)
 [INFO] Mode SIMULATION
 [INFO] Check command-line
 [INFO] Set variables

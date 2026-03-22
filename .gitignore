@@ -1,0 +1,7 @@
+*.debug
+*.o
+*.ppu
+*.desktop
+*.sh
+installmse
+installmse.exe 
