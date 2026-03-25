@@ -30,28 +30,33 @@ var
   llog: TLog;
   
 procedure createbuildscript(const scriptname, msedir: filenamety);
+const
+  clinebreak = {$IFDEF mswindows}'^'{$ELSE}'\'{$ENDIF};
 var
   lstream: ttextstream;
 begin
   lstream := ttextstream.create(scriptname, fm_create);
   lstream.writeln(unicodeformat('cd %s/apps/ide', [msedir]));
-  lstream.writeln('fpc \');
-  lstream.writeln('-Fu../../lib/common/* \');
-  lstream.writeln('-Fu../../lib/common/kernel \');
-  lstream.writeln('-Fi../../lib/common/kernel \');
-  lstream.writeln('-Fu../../lib/common/kernel/' + ctargetos + ' \');
+  lstream.writeln('fpc ' + clinebreak);
+  lstream.writeln('-Fu../../lib/common/* ' + clinebreak);
+  lstream.writeln('-Fu../../lib/common/kernel ' + clinebreak);
+  lstream.writeln('-Fi../../lib/common/kernel ' + clinebreak);
+  lstream.writeln('-Fu../../lib/common/kernel/' + ctargetos + ' ' + clinebreak);
   lstream.writeln('-Mobjfpc -Sh mseide.pas');
   lstream.close;
   lstream.free;
 end;
 
 procedure createstartscript(const scriptname, msedir: filenamety);
+const
+  cmseidevalue = {$IFDEF mswindows}'%MSEIDE%'{$ELSE}'$MSEIDE'{$ENDIF};
+  cparamsvalue = {$IFDEF mswindows}'%*'{$ELSE}'$*'{$ENDIF};
 var
   lstream: ttextstream;
 begin
   lstream := ttextstream.create(scriptname, fm_create);
   lstream.writeln(unicodeformat('MSEIDE=%s/apps/ide/mseide', [msedir]));
-  lstream.writeln('$MSEIDE --globstatfile=$MSEIDE.sta $*');
+  lstream.writeln('$MSEIDE --globstatfile=$MSEIDE.sta ' + cparamsvalue);
   lstream.close;
   lstream.free;
 end;
@@ -60,7 +65,9 @@ end;
 
 const
   caction = {$IFDEF release}true{$ELSE}false{$ENDIF};
-
+  cscriptext = {$IFDEF mswindows}'.cmd'{$ELSE}'.sh'{$ENDIF};
+  cinterpreter = {$IFDEF mswindows}'cmd /C '{$ELSE}'sh '{$ENDIF};
+  
 var
   ltimestamp, linstall: msestring;
   lparentdir, lmsedir: filenamety;
@@ -125,17 +132,19 @@ var
 begin
 { Compilation de MSEide }
   writeln('[INFO] Create script to build MSEide');
-  lfilename := extractfilepath(sys_getapplicationpath) + 'build-' + linstall + '.sh';
+  lfilename := extractfilepath(sys_getapplicationpath) + 'build-' + linstall + cscriptext;
   createbuildscript(lfilename, lmsedir);
   
   writeln('[INFO] Build MSEide');
-  lcmd := 'sh ' + lfilename;
+  lcmd := cinterpreter + lfilename;
   llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
   if caction then
     execwaitmse(lcmd);
 end;
 
 procedure Configure;
+const
+  cpathdelim = {$IFDEF mswindows}'\'{$ELSE}'/'{$ENDIF};
 var
   lfilename: filenamety;
   lcmd: msestring;
@@ -144,12 +153,15 @@ begin
 
   writeln('[INFO] Create script to start MSEide');
   
-  lfilename := extractfilepath(sys_getapplicationpath) + 'start-' + linstall + '.sh';
+  lfilename := extractfilepath(sys_getapplicationpath) + 'start-' + linstall + cscriptext;
   createstartscript(lfilename, lmsedir);
 
   writeln('[INFO] Configure MSEide');
   
-  lcmd := UnicodeFormat('sh %s --macrodef=MSEDIR,%s/ --storeglobalmacros', [lfilename, lmsedir]);
+  lcmd := UnicodeFormat(
+    cinterpreter + '%s --macrodef=MSEDIR,%s' + cpathdelim + ' --storeglobalmacros',
+    [lfilename, lmsedir]
+  );
   llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
   if caction then
     execwaitmse(lcmd);
@@ -186,7 +198,7 @@ begin
     
     if DirectoryExists(ltargetdir) then
     begin
-      lcmd := unicodeformat('cp -fv %s %s', [lfilename, ltargetdir + '/' + linstall + '.desktop']);
+      lcmd := unicodeformat('cp -f %s %s', [lfilename, ltargetdir + '/' + linstall + '.desktop']);
       llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
       if caction then
         execwaitmse(lcmd);
@@ -200,12 +212,16 @@ begin
   ltargetdir := sys_getuserhomedir + '/.local/share/applications';
   if DirectoryExists(ltargetdir) then
   begin
-    lcmd := unicodeformat('cp -fv %s %s', [lfilename, ltargetdir + '/' + linstall + '.desktop']);
+    lcmd := unicodeformat('cp -f %s %s', [lfilename, ltargetdir + '/' + linstall + '.desktop']);
     llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
     if caction then
       execwaitmse(lcmd);
   end else
     writeln(unicodeformat('[WARNING] Cannot find directory "%s"', [ltargetdir]));
+end;
+
+procedure CreateShortcutsWin;
+begin
 end;
 
 procedure GoodBye;
@@ -220,10 +236,10 @@ begin
   Clone;
   Build;
   Configure;
+{$IFDEF mswindows}
+  CreateShortcutsWin;
+{$ELSE}
   CreateShortcuts;
+{$ENDIF}
   GoodBye;
-{$IFDEF LINUX}
-{$ENDIF}
-{$IFDEF MSWINDOWS}
-{$ENDIF}
 end.

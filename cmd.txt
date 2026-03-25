@@ -1,0 +1,181 @@
+https://ss64.com/nt/cmd.html
+
+CMD.exe
+
+Start a new CMD shell and (optionally) run a command/executable program.
+
+Syntax
+      CMD [charset] [options]
+
+      CMD [charset] [options] [/C Command] 
+
+      CMD [charset] [options] [/K Command] 
+
+Options   
+   /C     Close: Run Command and then terminate and close.
+
+   /K     Keep:  Run Command and then keep the window open at the CMD prompt.
+          This is useful for testing, e.g. to examine variables.
+
+   Command : The command, program or batch script to be run.
+             This can even be several commands separated with '&' 
+             (the whole should also be surrounded by "quotes")
+
+   /T:fg  Sets the foreground/background colours.
+   
+   /A     Output ANSI characters (7 or 8 bit).
+   /U     Output UNICODE characters (UCS-2 le).
+
+          These options will affect piping or redirecting to a file.
+          Most common text files are ASCII/ANSI, use these switches if
+          you need to convert the character set.
+
+   /D     Ignore registry AutoRun commands.
+          HKLM | HKCU \Software\Microsoft\Command Processor\AutoRun
+
+   /E:ON  Enable CMD Command Extensions (default).
+   /X     Enable CMD Command Extensions (old switch for compatibility).
+
+   /E:OFF Disable CMD Command Extensions.
+   /Y     Disable CMD Command Extensions (old switch for compatibility).
+
+   /F:ON  Enable auto-completion of pathnames entered at the CMD prompt
+   /F:OFF Disable auto-completion of pathnames entered at the CMD prompt (default)
+
+        Auto-completion is an addition to the default Tab Completion. At the command prompt Ctrl-D will give folder name completion and Ctrl-F will give give File and folder name completion.
+
+        These key-strokes will display the first matching path. Thereafter, repeated pressing of the same control key will cycle through the list of matching paths. As with Tab completion, Pressing SHIFT with the control key will move through the list backwards.
+
+   /Q    Turn Echo off. This does not disable output.
+         To minimise the CMD window use CMD.exe /C START "" /Min CMD.exe /C MyScript.cmd
+
+   /S    Strip " quote characters from command.
+         If command starts with a quote, the first and last quote chars in command
+         will be removed, whether /s is specified or not.
+
+   /V:ON Enable delayed environment variable expansion 
+         this allows a FOR loop to specify !variable! instead of %variable% 
+         expanding the variable at execution time instead of at input time. 
+   
+   /V:OFF
+         Disable delayed environment expansion.
+         Delayed Environment expansion can also be set with SETLOCAL.
+
+If /C or /K is specified, then the remainder of the command line is processed as an immediate command in the new shell. Multiple commands separated by the command separator '&' or '&&' are accepted if surrounded by quotes.
+
+In Windows Explorer, you can type "cmd" in the address bar to open a prompt at the current location.
+For more detail about the CMD shell: QuickEdit, handing quotes, max line length etc, see the CMD Syntax page.
+
+If you start a second nested CMD shell (or PowerShell), this will be added to the TITLE of the CMD/terminal window, when you EXIT back to the initial shell, the Title will also revert making it possible to track how many nested shells you have open.
+ErrorLevel
+
+    CMD /C will return an errorlevel, 0 for success and >0 for any error.
+    For example:
+    CMD /c dir Z:
+    If the drive Z: does not exist, this will return %errorlevel% = 1 to the calling (parent) shell.
+
+Launch CMD as Admin
+
+    A batch file to launch CMD as admin in the directory C:\batch\ this requires a short helper script in VBscript:
+
+    Admin.cmd
+
+    @Echo off
+    cscript getadmin.vbs
+
+    getadmin.vbs
+
+    Set objShell = CreateObject("Shell.Application")
+    objShell.ShellExecute "cmd.exe", "/k CD C:\batch\ ", "C:\batch\ ", "runas", 1
+
+Launching CMD/batch files from a UNC path
+
+    While most command line utilities do fully support UNC paths, they cannot be set as the current directory. Launching a batch file from a UNC path will implicitly run CMD.exe with that UNC path, this will often return the error: path is an invalid current directory path. UNC paths are not supported. Defaulting to Windows directory.
+    This can be dangerous if your batch file makes any assumptions about the current directory,
+    e.g. if it includes the line DEL *.ico, that will delete .ico files from the Windows directory instead of the folder where the batch file resides.
+    If you are confident that the batch file won’t be affected by this, you can suppress the error in one of two ways: Add a CLS command as the first line of the batch script, or add the registry key DisableUNCCheck as described in Q156276
+
+    Alternatively start the batch file with pushd "%~dp0"
+    That will change directory to your batch file location (%0), and for UNC paths it will auto-create a temporary drive map.
+
+Launching CMD/batch files from PowerShell
+
+    When calling CMD from PowerShell the --% operator can be used to control when $ symbols and quoted expressions will be interpreted/expanded by PowerShell:
+
+    cmd.exe --% /c dir "C:\financial $accounts\" /w
+
+    Anything to the left of --% will be expanded:
+
+    $folder = 'C:\financial $accounts\'
+    cmd.exe /c dir $folder --%/w
+
+Inheritance
+
+    A new CMD.exe session can be instantiated in several ways, explicitly starting a new CMD session from an existing CMD shell, CALLing a batch file or implicit instantiation caused by piping a command or running a FOR /F command.
+
+    In all these cases, only the environment variable values are inherited by the new CMD session. Delayed expansion state, Command extension state and Echo state will all revert back to the default state based on the registry.
+    For more detail on inheritance and expansion see this StackOverflow thread.
+
+Command Extensions
+
+    Disabling Command Extensions may affect the operation of CMD’s internal commands, and will also remove most dynamic/volatile environment variables ( %CD% %DATE% %TIME% %RANDOM% %ERRORLEVEL% %CMDEXTVERSION% %CMDCMDLINE% %HIGHESTNUMANODENUMBER% )
+
+    Command Extensions are enabled by default.
+    This can be changed by setting a value in the registry: HKCU\Software\Microsoft\Command Processor\EnableExtensions
+    Command Extensions can also be turned on or off by running CMD /e:on or CMD /e:off
+    or run SETLOCAL EnableExtensions (SetLocal will take precedence)
+
+    Forum thread: Checking if command extensions are available.
+    StackOverflow: Detail of the changes when disabling extensions.
+
+Examples
+
+Run a program and pass a Filename parameter:
+
+    CMD /c notepad.exe c:\docs\sample.txt
+
+Run a program and pass a Long Filename:
+
+    CMD /c notepad.exe "c:\sample documents\sample.txt"
+
+To open in a separate CMD window:
+
+    START "my neato script" CMD /C notepad.exe c:\docs\sample.txt
+
+Spaces in Program Path:
+
+    CMD /c ""c:\Program Files\Microsoft Office\Office\Winword.exe""
+
+Spaces in Program Path + parameters:
+
+    CMD /c ""c:\Program Files\demo.cmd"" Parameter1 Param2
+
+Spaces in Program Path + parameters with spaces:
+
+    CMD /k ""c:\batch files\demo.cmd" "Parameter 1 with space" "Parameter2 with space""
+
+CMD will strip the outer quotes if there is a double quote at the start and end so you can also cheat and write the above as:
+
+    CMD /k @"c:\batch files\demo.cmd" "Parameter 1 with space" "Parameter2 with space"
+
+Launch Demo1 and then Launch Demo2:
+
+    CMD /c ""c:\Program Files\demo1.cmd" & "c:\Program Files\demo2.cmd""
+
+“Those who can command themselves, command others” ~ Hazlitt
+Related commands
+
+CMD Shell - Tips on working in the Windows CMD shell.
+EXIT - Use this to close a CMD shell and return.
+CALL - Call one batch program from another.
+START - Run a program, command or batch file.
+DOSKEY - Edit command line, recall commands.
+CMD Internal - Commands that are Internal to the CMD shell.
+WT - Windows Terminal.
+4NT - Terminal and Shell replacement for CMD.exe (not free).
+Q156276 - Cmd does not support UNC names as the current directory.
+Equivalent PowerShell: You can run the CMD shell under PowerShell, Exit will return you to the PS prompt.
+Equivalent bash command (Linux): bash - run the bash shell (also csh, ksh, sh).
+ 
+Copyright © 1999-2026 SS64.com
+Some rights reserved

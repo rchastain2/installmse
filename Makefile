@@ -34,4 +34,4 @@ distclean: clean
 	@rm -fv $(PROGRAM) $(PROGRAM).dbg $(PROGRAM).exe
 
 test: $(PROGRAM)
-	./$< --dir=/home/roland/Applications 2> $<.debug | tee $<.log
+	./$< --dir=/home/roland/Applications 2> $@.debug | tee $@.log
