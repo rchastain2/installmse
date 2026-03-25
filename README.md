@@ -1,15 +1,13 @@
 # InstallMSE
 
-*MSEide+MSEgui* installer for command-line.
+Simple program who installs *MSEide*, that is:
 
-## What it does
+- clones *MSEide+MSEgui* *git* repository,
+- builds *MSEide*,
+- configures *MSEide*,
+- create start script and desktop shortcuts.
 
-- Clone *MSEide+MSEgui* *git* repository
-- Build *MSEide*
-- Configure *MSEide*
-- Create start script and desktop shortcuts
-
-The start script and the desktop shortcuts are created with **--globstatfile** option (so that each *MSEide* binary installed by this program use its own configuration file).
+The start script and the desktop shortcuts are created with **--globstatfile** option (so that each *MSEide* binary installed use its own configuration file).
 
 ## Usage
 

@@ -1,13 +1,11 @@
 # InstallMSE
 
-Installateur *MSEide+MSEgui* pour la ligne de commande.
+Simple programme qui installe *MSEide*, c'est-à-dire qui :
 
-## Ce qu'il fait
-
-- Cloner le dépôt *git* de *MSEide+MSEgui*
-- Compiler *MSEide*
-- Configurer *MSEide*
-- Créer un script de lancement et des raccourcis
+- clone le dépôt *git* de *MSEide+MSEgui*,
+- compile *MSEide*,
+- configure *MSEide*,
+- crée un script de lancement et des raccourcis.
 
 Le script de lancement et les raccourcis sont créés avec l'option **--globstatfile** (en sorte que chaque binaire de *MSEide* installé utilise son propre fichier de configuration).
 

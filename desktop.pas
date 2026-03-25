@@ -1,5 +1,5 @@
 
-unit desktopfile;
+unit desktop;
 
 {$ifdef FPC}{$mode objfpc}{$h+}{$endif}
 

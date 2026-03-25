@@ -17,12 +17,18 @@ uses
   msestrings,   { msestrlicomp }
   msesysintf,   { sys_* }
   msestream,    { ttextstream }
-  desktopfile,
-  readversion;
+  desktop,
+  readversion,
+  log;
 
 const
+  capp = 'InstallMSE 0.3';
+  clog = 'installmse.log';
   ctargetos = {$IFDEF mswindows}'windows'{$ELSE}'linux'{$ENDIF};
 
+var
+  llog: TLog;
+  
 procedure createbuildscript(const scriptname, msedir: filenamety);
 var
   lstream: ttextstream;
@@ -56,7 +62,7 @@ const
   caction = {$IFDEF release}true{$ELSE}false{$ENDIF};
 
 var
-  ltimestamp, linstallname: msestring;
+  ltimestamp, linstall: msestring;
   lparentdir, lmsedir: filenamety;
 
 procedure Hello;
@@ -64,8 +70,9 @@ const
   cbuild = 'FPC ' + {$I %FPCVERSION%} + ' ' + {$I %DATE%} + ' ' + {$I %TIME%} + ' ' + {$I %FPCTARGETOS%} + '-' + {$I %FPCTARGETCPU%};
   cactionstr: array[boolean] of msestring = ('SIMULATION', 'ACTION');
 begin
-  writeln('MSEinstall 0.2 (' + cbuild + ')');
+  writeln(capp + ' (' + cbuild + ')');
   writeln('[INFO] Mode ' + cactionstr[caction]);
+  llog := TLog.Create(clog);
 end;
 
 procedure Init;
@@ -84,7 +91,7 @@ begin
   larg := getcommandlinearguments;
   for i := 1 to high(larg) do
   begin
-    writeln(erroutput, unicodeformat('[DEBUG] larg[%d]    = "%s"', [i, larg[i]]));
+    llog.Append(unicodeformat('[DEBUG] larg[%d]    = "%s"', [i, larg[i]]));
     if msestrlicomp(pmsechar(larg[i]), pmsechar(copt), length(copt)) = 0 then
       lparentdir := copy(larg[i], length(copt) + 1, msetypes.bigint);
   end;
@@ -92,9 +99,9 @@ begin
 { Initialisation des autres variables }
   writeln('[INFO] Set variables');
   ltimestamp := utf8tostring(FormatDateTime(cfmt, Now));
-  linstallname := 'mseide-' + ltimestamp;
-  lmsedir := lparentdir + '/' + linstallname;
-  writeln(erroutput, '[DEBUG] lmsedir    = "', lmsedir, '"');
+  linstall := 'mseide-' + ltimestamp;
+  lmsedir := lparentdir + '/' + linstall;
+  llog.Append(unicodeformat('[DEBUG] lmsedir    = "%s"', [lmsedir]));
 end;
 
 procedure Clone;
@@ -106,7 +113,7 @@ begin
 { Clonage du dépôt git }
   writeln('[INFO] Clone repository');
   lcmd := UnicodeFormat('git clone --single-branch --depth 1 %s %s', [curl, lmsedir]);
-  writeln(erroutput, '[DEBUG] lcmd       = "', lcmd, '"');
+  llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
   if caction then
     execwaitmse(lcmd);
 end;
@@ -118,12 +125,12 @@ var
 begin
 { Compilation de MSEide }
   writeln('[INFO] Create script to build MSEide');
-  lfilename := extractfilepath(sys_getapplicationpath) + 'build-' + linstallname + '.sh';
+  lfilename := extractfilepath(sys_getapplicationpath) + 'build-' + linstall + '.sh';
   createbuildscript(lfilename, lmsedir);
   
   writeln('[INFO] Build MSEide');
   lcmd := 'sh ' + lfilename;
-  writeln(erroutput, '[DEBUG] lcmd       = "', lcmd, '"');
+  llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
   if caction then
     execwaitmse(lcmd);
 end;
@@ -137,13 +144,13 @@ begin
 
   writeln('[INFO] Create script to start MSEide');
   
-  lfilename := extractfilepath(sys_getapplicationpath) + 'start-' + linstallname + '.sh';
+  lfilename := extractfilepath(sys_getapplicationpath) + 'start-' + linstall + '.sh';
   createstartscript(lfilename, lmsedir);
 
   writeln('[INFO] Configure MSEide');
   
   lcmd := UnicodeFormat('sh %s --macrodef=MSEDIR,%s/ --storeglobalmacros', [lfilename, lmsedir]);
-  writeln(erroutput, '[DEBUG] lcmd       = "', lcmd, '"');
+  llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
   if caction then
     execwaitmse(lcmd);
 end;
@@ -158,10 +165,9 @@ var
   i: integer;
 begin
   readmseversion(stringtoutf8(lmsedir), lmseidever, lmseguiver);
-  writeln(erroutput, '[DEBUG] lmseidever = "', lmseidever, '"');
-  writeln(erroutput, '[DEBUG] lmseguiver = "', lmseguiver, '"');
+  llog.Append(unicodeformat('[DEBUG] lmseidever = "%s"', [lmseidever]));
   
-  lfilename := extractfilepath(sys_getapplicationpath) + linstallname + '.desktop';
+  lfilename := extractfilepath(sys_getapplicationpath) + linstall + '.desktop';
 
   createdesktopfile(
     lfilename,
@@ -180,8 +186,8 @@ begin
     
     if DirectoryExists(ltargetdir) then
     begin
-      lcmd := unicodeformat('cp -fv %s %s', [lfilename, ltargetdir + '/' + linstallname + '.desktop']);
-      writeln(erroutput, unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
+      lcmd := unicodeformat('cp -fv %s %s', [lfilename, ltargetdir + '/' + linstall + '.desktop']);
+      llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
       if caction then
         execwaitmse(lcmd);
       break;
@@ -194,12 +200,18 @@ begin
   ltargetdir := sys_getuserhomedir + '/.local/share/applications';
   if DirectoryExists(ltargetdir) then
   begin
-    lcmd := unicodeformat('cp -fv %s %s', [lfilename, ltargetdir + '/' + linstallname + '.desktop']);
-    writeln(erroutput, unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
+    lcmd := unicodeformat('cp -fv %s %s', [lfilename, ltargetdir + '/' + linstall + '.desktop']);
+    llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
     if caction then
       execwaitmse(lcmd);
   end else
     writeln(unicodeformat('[WARNING] Cannot find directory "%s"', [ltargetdir]));
+end;
+
+procedure GoodBye;
+begin
+  writeln('[INFO] Done');
+  llog.Free;
 end;
 
 begin
@@ -209,7 +221,7 @@ begin
   Build;
   Configure;
   CreateShortcuts;
-  writeln('[INFO] Done');
+  GoodBye;
 {$IFDEF LINUX}
 {$ENDIF}
 {$IFDEF MSWINDOWS}
