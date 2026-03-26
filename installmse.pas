@@ -17,6 +17,7 @@ uses
   msestrings,   { msestrlicomp }
   msesysintf,   { sys_* }
   msestream,    { ttextstream }
+  msefileutils, { tosysfilepath }
   desktop,
   readversion,
   log;
@@ -25,7 +26,8 @@ const
   capp = 'InstallMSE 0.3';
   clog = 'installmse.log';
   ctargetos = {$IFDEF mswindows}'windows'{$ELSE}'linux'{$ENDIF};
-
+  cpathdelim = {$IFDEF mswindows}'\'{$ELSE}'/'{$ENDIF};
+  
 var
   llog: TLog;
   
@@ -36,7 +38,7 @@ var
   lstream: ttextstream;
 begin
   lstream := ttextstream.create(scriptname, fm_create);
-  lstream.writeln(unicodeformat('cd %s/apps/ide', [msedir]));
+  lstream.writeln(unicodeformat('cd %s' + cpathdelim + 'apps' + cpathdelim + 'ide', [msedir]));
   lstream.writeln('fpc ' + clinebreak);
   lstream.writeln('-Fu../../lib/common/* ' + clinebreak);
   lstream.writeln('-Fu../../lib/common/kernel ' + clinebreak);
@@ -55,8 +57,8 @@ var
   lstream: ttextstream;
 begin
   lstream := ttextstream.create(scriptname, fm_create);
-  lstream.writeln(unicodeformat('MSEIDE=%s/apps/ide/mseide', [msedir]));
-  lstream.writeln('$MSEIDE --globstatfile=$MSEIDE.sta ' + cparamsvalue);
+  lstream.writeln(unicodeformat({$IFDEF mswindows}'set ' +{$ENDIF}'MSEIDE=%s' + cpathdelim + 'apps' + cpathdelim + 'ide' + cpathdelim + 'mseide', [msedir]));
+  lstream.writeln(cmseidevalue + ' --globstatfile=' + cmseidevalue + '.sta ' + cparamsvalue);
   lstream.close;
   lstream.free;
 end;
@@ -65,8 +67,8 @@ end;
 
 const
   caction = {$IFDEF release}true{$ELSE}false{$ENDIF};
-  cscriptext = {$IFDEF mswindows}'.cmd'{$ELSE}'.sh'{$ENDIF};
-  cinterpreter = {$IFDEF mswindows}'cmd /C '{$ELSE}'sh '{$ENDIF};
+  cext = {$IFDEF mswindows}'.cmd'{$ELSE}'.sh'{$ENDIF};
+  cexe = {$IFDEF mswindows}'cmd /C '{$ELSE}'sh '{$ENDIF};
   
 var
   ltimestamp, linstall: msestring;
@@ -91,7 +93,7 @@ var
   i: integer;
 begin
 { Emplacement par défaut pour l'installation }
-  lparentdir := sys_getcurrentdir;
+  lparentdir := tosysfilepath(sys_getcurrentdir);
   
 { Vérification de la ligne de commande }
   writeln('[INFO] Check command-line');
@@ -107,7 +109,7 @@ begin
   writeln('[INFO] Set variables');
   ltimestamp := utf8tostring(FormatDateTime(cfmt, Now));
   linstall := 'mseide-' + ltimestamp;
-  lmsedir := lparentdir + '/' + linstall;
+  lmsedir := lparentdir + cpathdelim + linstall;
   llog.Append(unicodeformat('[DEBUG] lmsedir    = "%s"', [lmsedir]));
 end;
 
@@ -132,19 +134,17 @@ var
 begin
 { Compilation de MSEide }
   writeln('[INFO] Create script to build MSEide');
-  lfilename := extractfilepath(sys_getapplicationpath) + 'build-' + linstall + cscriptext;
+  lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'build-' + linstall + cext;
   createbuildscript(lfilename, lmsedir);
   
   writeln('[INFO] Build MSEide');
-  lcmd := cinterpreter + lfilename;
+  lcmd := cexe + lfilename;
   llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
   if caction then
     execwaitmse(lcmd);
 end;
 
 procedure Configure;
-const
-  cpathdelim = {$IFDEF mswindows}'\'{$ELSE}'/'{$ENDIF};
 var
   lfilename: filenamety;
   lcmd: msestring;
@@ -153,13 +153,13 @@ begin
 
   writeln('[INFO] Create script to start MSEide');
   
-  lfilename := extractfilepath(sys_getapplicationpath) + 'start-' + linstall + cscriptext;
+  lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'start-' + linstall + cext;
   createstartscript(lfilename, lmsedir);
 
   writeln('[INFO] Configure MSEide');
   
   lcmd := UnicodeFormat(
-    cinterpreter + '%s --macrodef=MSEDIR,%s' + cpathdelim + ' --storeglobalmacros',
+    cexe + '%s --macrodef=MSEDIR,%s' + cpathdelim + ' --storeglobalmacros',
     [lfilename, lmsedir]
   );
   llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
