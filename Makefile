@@ -18,10 +18,7 @@ ifdef RELEASE
 PFLAGS += -dRELEASE
 endif
 
-#PROGRAM := $(notdir $(CURDIR))
 PROGRAM := installmse
-
-MAKEFLAGS += --no-print-directory
 
 default: $(PROGRAM)
 
@@ -33,6 +30,3 @@ clean:
 
 distclean: clean
 	@rm -fv $(PROGRAM) $(PROGRAM).dbg $(PROGRAM).exe
-
-test: $(PROGRAM)
-	./$< --dir=/home/roland/Applications 2> $@.debug | tee $@.log
