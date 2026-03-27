@@ -23,7 +23,7 @@ uses
   log;
 
 const
-  capp = 'InstallMSE 0.4';
+  capp = 'InstallMSE 0.5';
   clog = 'installmse.log';
   ctargetos = {$IFDEF mswindows}'windows'{$ELSE}'linux'{$ENDIF};
   cpathdelim = {$IFDEF mswindows}'\'{$ELSE}'/'{$ENDIF};
@@ -74,6 +74,18 @@ var
   ltimestamp, linstall: msestring;
   lparentdir, lmsedir: filenamety;
 
+procedure Exec(const cmd: msestring);
+var
+  lresult: integer;
+begin
+  llog.Append(unicodeformat('Exec(%s)', [cmd]));
+  if caction then
+  begin
+    lresult := execwaitmse(cmd);
+    llog.Append(unicodeformat('lresult: %d', [lresult]));
+  end;
+end;
+
 procedure Hello;
 const
   cbuild = 'FPC ' + {$I %FPCVERSION%} + ' ' + {$I %DATE%} + ' ' + {$I %TIME%} + ' ' + {$I %FPCTARGETOS%} + '-' + {$I %FPCTARGETCPU%};
@@ -115,9 +127,8 @@ end;
 
 procedure Clone;
 const
-  curl1 = 'https://codeberg.org/mse-org/mseide-msegui.git';
-  curl2 = 'https://github.com/mse-org/mseide-msegui.git';
-  curl = curl1;
+  curl = 'https://codeberg.org/mse-org/mseide-msegui.git';
+  //curl = 'https://github.com/mse-org/mseide-msegui.git';
 var
   lcmd: msestring;
 begin
@@ -125,31 +136,31 @@ begin
   writeln('[INFO] Cloning repository');
   lcmd := UnicodeFormat('git clone --single-branch --depth 1 %s %s', [curl, lmsedir]);
   llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
-  if caction then
-    execwaitmse(lcmd);
+  Exec(lcmd);
 end;
 
 procedure Build;
 var
-  lfilename: filenamety;
+  lfilename, lfilename2: filenamety;
   lcmd: msestring;
 begin
 { Compilation de MSEide }
   writeln('[INFO] Creating build script');
   lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'build-' + linstall + cext;
+  lfilename2 := tosysfilepath(filedir(sys_getapplicationpath) + 'build-' + linstall + cext);
+  llog.Append(unicodeformat('lfilename:%s  "%s"', [LineEnding, lfilename]));
+  llog.Append(unicodeformat('lfilename2:%s  "%s"', [LineEnding, lfilename2]));
   createbuildscript(lfilename, lmsedir);
-  
   writeln('[INFO] Building MSEide');
   lcmd := cexe + lfilename;
   llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
-  if caction then
-    execwaitmse(lcmd);
+  Exec(lcmd);
 end;
 
 procedure Configure;
 var
   lfilename: filenamety;
-  lcmd: msestring;
+  lcmd, lcmd2: msestring;
 begin
 { Configuration de MSEide }
 
@@ -161,12 +172,16 @@ begin
   writeln('[INFO] Configuring MSEide');
   
   lcmd := UnicodeFormat(
-    cexe + '%s --macrodef=MSEDIR,%s' + cpathdelim + ' --storeglobalmacros',
-    [lfilename, lmsedir]
+    cexe + '%s --macrodef=MSEDIR,%s --storeglobalmacros',
+    [lfilename, lmsedir + cpathdelim]
   );
   llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
-  if caction then
-    execwaitmse(lcmd);
+  lcmd2 := UnicodeFormat(
+    cexe + '%s --macrodef=MSEDIR,%s --storeglobalmacros',
+    [lfilename, tomsefilepath(lmsedir + cpathdelim)]
+  );
+  llog.Append(unicodeformat('lcmd2:%s  "%s"', [LineEnding, lcmd2]));
+  Exec(lcmd);
 end;
 
 procedure CreateShortcuts;
@@ -192,7 +207,7 @@ begin
   );
   
   lcmd := unicodeformat('chmod +x %s', [lfilename]);
-  execwaitmse(lcmd);
+  Exec(lcmd);
   
   i := 0;
   repeat
@@ -202,8 +217,7 @@ begin
     begin
       lcmd := unicodeformat('cp -f %s %s', [lfilename, ltargetdir + '/' + linstall + '.desktop']);
       llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
-      if caction then
-        execwaitmse(lcmd);
+      Exec(lcmd);
       break;
     end else
       writeln(unicodeformat('[WARNING] Directory not found: "%s"', [ltargetdir]));
@@ -216,8 +230,7 @@ begin
   begin
     lcmd := unicodeformat('cp -f %s %s', [lfilename, ltargetdir + '/' + linstall + '.desktop']);
     llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
-    if caction then
-      execwaitmse(lcmd);
+    Exec(lcmd);
   end else
     writeln(unicodeformat('[WARNING] Directory not found: "%s"', [ltargetdir]));
 end;
