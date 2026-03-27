@@ -35,7 +35,7 @@ git clone https://github.com/mse-org/mseide-msegui.git
 make
 ```
 
-By default the program is compiled in passive mode. (It creates build and start scripts but doesn't launch commands.)
+By default the program is compiled in passive mode: It creates build and start scripts but doesn't launch commands.
 
 Build in active mode:
 

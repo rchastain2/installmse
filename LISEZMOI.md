@@ -35,7 +35,7 @@ git clone https://github.com/mse-org/mseide-msegui.git
 make
 ```
 
-Par défaut l'installateur est compilé en mode passif. (Il crée les scripts mais ne lance pas les commandes.)
+Par défaut l'installateur est compilé en mode passif : Il crée les scripts mais ne lance pas les commandes.
 
 Compilation en mode actif :
 

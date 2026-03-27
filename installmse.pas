@@ -115,7 +115,9 @@ end;
 
 procedure Clone;
 const
-  curl = 'https://codeberg.org/mse-org/mseide-msegui.git';
+  curl1 = 'https://codeberg.org/mse-org/mseide-msegui.git';
+  curl2 = 'https://github.com/mse-org/mseide-msegui.git';
+  curl = curl1;
 var
   lcmd: msestring;
 begin
