@@ -18,7 +18,8 @@ ifdef RELEASE
 PFLAGS += -dRELEASE
 endif
 
-PROGRAM := $(notdir $(CURDIR))
+#PROGRAM := $(notdir $(CURDIR))
+PROGRAM := installmse
 
 MAKEFLAGS += --no-print-directory
 
