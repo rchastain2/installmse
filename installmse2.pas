@@ -22,14 +22,30 @@ uses
   readversion,
   log;
 
+type
+  TInstallMSE = class
+    constructor Create;
+    destructor Destroy; override;
+    procedure Execute;
+  strict private
+    flog: TLog;
+    finstall: msestring;
+    fparentdir, fmsedir: filenamety;
+    procedure Shell(const cmd: msestring);
+    procedure Init;
+    procedure Clone;
+    procedure Build;
+    procedure Configure;
+    procedure CreateShortcuts;
+    procedure CreateShortcutsWin;
+  end;
+
+(* -------------------------------------------------------------------------- *)
+
 const
-  capp = 'InstallMSE 0.5';
   ctargetos = {$IFDEF mswindows}'windows'{$ELSE}'linux'{$ENDIF};
   cpathdelim = {$IFDEF mswindows}'\'{$ELSE}'/'{$ENDIF};
 
-var
-  llog: TLog;
-  
 procedure createbuildscript(const scriptname, msedir: filenamety);
 const
   clinebreak = {$IFDEF mswindows}'^'{$ELSE}'\'{$ENDIF};
@@ -68,34 +84,39 @@ const
   caction = {$IFDEF release}true{$ELSE}false{$ENDIF};
   cext = {$IFDEF mswindows}'.cmd'{$ELSE}'.sh'{$ENDIF};
   cexe = {$IFDEF mswindows}'cmd /C '{$ELSE}'sh '{$ENDIF};
-  
-var
-  linstall: msestring;
-  lparentdir, lmsedir: filenamety;
 
-procedure Shell(const cmd: msestring);
-var
-  lresult: integer;
-begin
-  llog.Append(unicodeformat('Shell(%s)', [cmd]));
-  if caction then
-  begin
-    lresult := execwaitmse(cmd);
-    llog.Append(unicodeformat('lresult: %d', [lresult]));
-  end;
-end;
-
-procedure Hello;
+constructor TInstallMSE.Create;
 const
+  capp = 'InstallMSE 0.5';
   cbuild = 'FPC ' + {$I %FPCVERSION%} + ' ' + {$I %DATE%} + ' ' + {$I %TIME%} + ' ' + {$I %FPCTARGETOS%} + '-' + {$I %FPCTARGETCPU%};
   cactionstr: array[boolean] of msestring = ('SIMULATION', 'ACTION');
 begin
+  inherited Create;
   writeln(capp + ' (' + cbuild + ')');
   writeln('[INFO] Mode ' + cactionstr[caction]);
-  llog := TLog.Create(tosysfilepath(replacefileext(sys_getapplicationpath, 'log')));
+  flog := TLog.Create({clog}tosysfilepath(replacefileext(sys_getapplicationpath, 'log')));
 end;
 
-procedure Init;
+destructor TInstallMSE.Destroy;
+begin
+  writeln('[INFO] Done');
+  flog.Free;
+  inherited Destroy;
+end;
+
+procedure TInstallMSE.Shell(const cmd: msestring);
+var
+  lresult: integer;
+begin
+  flog.Append(unicodeformat('Shell(%s)', [cmd]));
+  if caction then
+  begin
+    lresult := execwaitmse(cmd);
+    flog.Append(unicodeformat('lresult: %d', [lresult]));
+  end;
+end;
+
+procedure TInstallMSE.Init;
 const
   copt = '--DIR='; { Second paramètre de la fonction mseStrLIComp. Doit être en majuscules. }
   cfmt = 'YYMMDDhhnn';
@@ -104,28 +125,25 @@ var
   ltimestamp: msestring;
   i: integer;
 begin
-{ Emplacement par défaut pour l'installation }
-  lparentdir := tosysfilepath(sys_getcurrentdir);
+  fparentdir := tosysfilepath(sys_getcurrentdir);
   
-{ Vérification de la ligne de commande }
   writeln('[INFO] Checking command-line');
   larg := getcommandlinearguments;
   for i := 1 to high(larg) do
   begin
-    llog.Append(unicodeformat('larg[%d]:%s  "%s"', [i, LineEnding, larg[i]]));
+    flog.Append(unicodeformat('larg[%d]:%s  "%s"', [i, LineEnding, larg[i]]));
     if msestrlicomp(pmsechar(larg[i]), pmsechar(copt), length(copt)) = 0 then
-      lparentdir := copy(larg[i], length(copt) + 1, msetypes.bigint);
+      fparentdir := copy(larg[i], length(copt) + 1, msetypes.bigint);
   end;
   
-{ Réglage des autres variables }
   writeln('[INFO] Setting variables');
   ltimestamp := utf8tostring(FormatDateTime(cfmt, Now));
-  linstall := 'mseide-' + ltimestamp;
-  lmsedir := lparentdir + cpathdelim + linstall;
-  llog.Append(unicodeformat('lmsedir:%s  "%s"', [LineEnding, lmsedir]));
+  finstall := 'mseide-' + ltimestamp;
+  fmsedir := fparentdir + cpathdelim + finstall;
+  flog.Append(unicodeformat('fmsedir:%s  "%s"', [LineEnding, fmsedir]));
 end;
 
-procedure Clone;
+procedure TInstallMSE.Clone;
 const
   curl = 'https://codeberg.org/mse-org/mseide-msegui.git';
   //curl = 'https://github.com/mse-org/mseide-msegui.git';
@@ -134,30 +152,30 @@ var
 begin
 { Clonage du dépôt git }
   writeln('[INFO] Cloning repository');
-  lcmd := UnicodeFormat('git clone --single-branch --depth 1 %s %s', [curl, lmsedir]);
-  llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
+  lcmd := UnicodeFormat('git clone --single-branch --depth 1 %s %s', [curl, fmsedir]);
+  flog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
   Shell(lcmd);
 end;
 
-procedure Build;
+procedure TInstallMSE.Build;
 var
   lfilename, lfilename2: filenamety;
   lcmd: msestring;
 begin
 { Compilation de MSEide }
   writeln('[INFO] Creating build script');
-  lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'build-' + linstall + cext;
-  lfilename2 := tosysfilepath(filedir(sys_getapplicationpath) + 'build-' + linstall + cext);
-  llog.Append(unicodeformat('lfilename:%s  "%s"', [LineEnding, lfilename]));
-  llog.Append(unicodeformat('lfilename2:%s  "%s"', [LineEnding, lfilename2]));
-  createbuildscript(lfilename, lmsedir);
+  lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'build-' + finstall + cext;
+  lfilename2 := tosysfilepath(filedir(sys_getapplicationpath) + 'build-' + finstall + cext);
+  flog.Append(unicodeformat('lfilename:%s  "%s"', [LineEnding, lfilename]));
+  flog.Append(unicodeformat('lfilename2:%s  "%s"', [LineEnding, lfilename2]));
+  createbuildscript(lfilename, fmsedir);
   writeln('[INFO] Building MSEide');
   lcmd := cexe + lfilename;
-  llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
+  flog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
   Shell(lcmd);
 end;
 
-procedure Configure;
+procedure TInstallMSE.Configure;
 var
   lfilename: filenamety;
   lcmd, lcmd2: msestring;
@@ -166,25 +184,25 @@ begin
 
   writeln('[INFO] Creating start script');
   
-  lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'start-' + linstall + cext;
-  createstartscript(lfilename, lmsedir);
+  lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'start-' + finstall + cext;
+  createstartscript(lfilename, fmsedir);
 
   writeln('[INFO] Configuring MSEide');
   
   lcmd := UnicodeFormat(
     cexe + '%s --macrodef=MSEDIR,%s --storeglobalmacros',
-    [lfilename, lmsedir + cpathdelim]
+    [lfilename, fmsedir + cpathdelim]
   );
-  llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
+  flog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
   lcmd2 := UnicodeFormat(
     cexe + '%s --macrodef=MSEDIR,%s --storeglobalmacros',
-    [lfilename, tomsefilepath(lmsedir + cpathdelim)]
+    [lfilename, tomsefilepath(fmsedir + cpathdelim)]
   );
-  llog.Append(unicodeformat('lcmd2:%s  "%s"', [LineEnding, lcmd2]));
+  flog.Append(unicodeformat('lcmd2:%s  "%s"', [LineEnding, lcmd2]));
   Shell(lcmd);
 end;
 
-procedure CreateShortcuts;
+procedure TInstallMSE.CreateShortcuts;
 const
   cdesktopnames: array[0..1] of msestring = ('Bureau', 'Desktop');
 var
@@ -193,17 +211,17 @@ var
   lcmd: msestring;
   i: integer;
 begin
-  readmseversion(stringtoutf8(lmsedir), lmseidever, lmseguiver);
-  llog.Append(unicodeformat('lmseidever:%s  "%s"', [LineEnding, lmseidever]));
+  readmseversion(stringtoutf8(fmsedir), lmseidever, lmseguiver);
+  flog.Append(unicodeformat('lmseidever:%s  "%s"', [LineEnding, lmseidever]));
   
-  lfilename := extractfilepath(sys_getapplicationpath) + linstall + '.desktop';
+  lfilename := extractfilepath(sys_getapplicationpath) + finstall + '.desktop';
 
   createdesktopfile(
     lfilename,
     unicodeformat('MSEide %s', [lmseidever]),
-    unicodeformat('%s/apps/ide/mseide --globstatfile=%s/apps/ide/mseide.sta %%F', [lmsedir, lmsedir]),
-    unicodeformat('%s/msegui_48.png', [lmsedir]),
-    unicodeformat('%s/apps/ide', [lmsedir])
+    unicodeformat('%s/apps/ide/mseide --globstatfile=%s/apps/ide/mseide.sta %%F', [fmsedir, fmsedir]),
+    unicodeformat('%s/msegui_48.png', [fmsedir]),
+    unicodeformat('%s/apps/ide', [fmsedir])
   );
   
   lcmd := unicodeformat('chmod +x %s', [lfilename]);
@@ -215,8 +233,8 @@ begin
     
     if DirectoryExists(ltargetdir) then
     begin
-      lcmd := unicodeformat('cp -f %s %s', [lfilename, ltargetdir + '/' + linstall + '.desktop']);
-      llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
+      lcmd := unicodeformat('cp -f %s %s', [lfilename, ltargetdir + '/' + finstall + '.desktop']);
+      flog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
       Shell(lcmd);
       break;
     end else
@@ -228,25 +246,19 @@ begin
   ltargetdir := sys_getuserhomedir + '/.local/share/applications';
   if DirectoryExists(ltargetdir) then
   begin
-    lcmd := unicodeformat('cp -f %s %s', [lfilename, ltargetdir + '/' + linstall + '.desktop']);
-    llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
+    lcmd := unicodeformat('cp -f %s %s', [lfilename, ltargetdir + '/' + finstall + '.desktop']);
+    flog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
     Shell(lcmd);
   end else
     writeln(unicodeformat('[WARNING] Directory not found: "%s"', [ltargetdir]));
 end;
 
-procedure CreateShortcutsWin;
+procedure TInstallMSE.CreateShortcutsWin;
 begin
 end;
 
-procedure GoodBye;
+procedure TInstallMSE.Execute;
 begin
-  writeln('[INFO] Done');
-  llog.Free;
-end;
-
-begin
-  Hello;
   Init;
   Clone;
   Build;
@@ -256,5 +268,13 @@ begin
 {$ELSE}
   CreateShortcuts;
 {$ENDIF}
-  GoodBye;
+end;
+
+var
+  linstall: TInstallMSE;
+  
+begin
+  linstall := TInstallMSE.Create;
+  linstall.Execute;
+  linstall.Free;
 end.

@@ -11,6 +11,9 @@
 installmse
 installmse.exe 
 
+installmse2
+installmse2.exe
+
 /mseide-msegui/
 
 git.pas
