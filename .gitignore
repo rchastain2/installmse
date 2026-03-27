@@ -10,3 +10,8 @@
 
 installmse
 installmse.exe 
+
+/mseide-msegui/
+
+git.pas
+copydirectory.pas

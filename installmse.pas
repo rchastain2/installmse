@@ -96,21 +96,21 @@ begin
   lparentdir := tosysfilepath(sys_getcurrentdir);
   
 { Vérification de la ligne de commande }
-  writeln('[INFO] Check command-line');
+  writeln('[INFO] Checking command-line');
   larg := getcommandlinearguments;
   for i := 1 to high(larg) do
   begin
-    llog.Append(unicodeformat('[DEBUG] larg[%d]    = "%s"', [i, larg[i]]));
+    llog.Append(unicodeformat('larg[%d]:%s  "%s"', [i, LineEnding, larg[i]]));
     if msestrlicomp(pmsechar(larg[i]), pmsechar(copt), length(copt)) = 0 then
       lparentdir := copy(larg[i], length(copt) + 1, msetypes.bigint);
   end;
   
-{ Initialisation des autres variables }
-  writeln('[INFO] Set variables');
+{ Réglage des autres variables }
+  writeln('[INFO] Setting variables');
   ltimestamp := utf8tostring(FormatDateTime(cfmt, Now));
   linstall := 'mseide-' + ltimestamp;
   lmsedir := lparentdir + cpathdelim + linstall;
-  llog.Append(unicodeformat('[DEBUG] lmsedir    = "%s"', [lmsedir]));
+  llog.Append(unicodeformat('lmsedir:%s  "%s"', [LineEnding, lmsedir]));
 end;
 
 procedure Clone;
@@ -120,9 +120,9 @@ var
   lcmd: msestring;
 begin
 { Clonage du dépôt git }
-  writeln('[INFO] Clone repository');
+  writeln('[INFO] Cloning repository');
   lcmd := UnicodeFormat('git clone --single-branch --depth 1 %s %s', [curl, lmsedir]);
-  llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
+  llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
   if caction then
     execwaitmse(lcmd);
 end;
@@ -133,13 +133,13 @@ var
   lcmd: msestring;
 begin
 { Compilation de MSEide }
-  writeln('[INFO] Create script to build MSEide');
+  writeln('[INFO] Creating build script');
   lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'build-' + linstall + cext;
   createbuildscript(lfilename, lmsedir);
   
-  writeln('[INFO] Build MSEide');
+  writeln('[INFO] Building MSEide');
   lcmd := cexe + lfilename;
-  llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
+  llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
   if caction then
     execwaitmse(lcmd);
 end;
@@ -151,18 +151,18 @@ var
 begin
 { Configuration de MSEide }
 
-  writeln('[INFO] Create script to start MSEide');
+  writeln('[INFO] Creating start script');
   
   lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'start-' + linstall + cext;
   createstartscript(lfilename, lmsedir);
 
-  writeln('[INFO] Configure MSEide');
+  writeln('[INFO] Configuring MSEide');
   
   lcmd := UnicodeFormat(
     cexe + '%s --macrodef=MSEDIR,%s' + cpathdelim + ' --storeglobalmacros',
     [lfilename, lmsedir]
   );
-  llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
+  llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
   if caction then
     execwaitmse(lcmd);
 end;
@@ -177,7 +177,7 @@ var
   i: integer;
 begin
   readmseversion(stringtoutf8(lmsedir), lmseidever, lmseguiver);
-  llog.Append(unicodeformat('[DEBUG] lmseidever = "%s"', [lmseidever]));
+  llog.Append(unicodeformat('lmseidever:%s  "%s"', [LineEnding, lmseidever]));
   
   lfilename := extractfilepath(sys_getapplicationpath) + linstall + '.desktop';
 
@@ -199,12 +199,12 @@ begin
     if DirectoryExists(ltargetdir) then
     begin
       lcmd := unicodeformat('cp -f %s %s', [lfilename, ltargetdir + '/' + linstall + '.desktop']);
-      llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
+      llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
       if caction then
         execwaitmse(lcmd);
       break;
     end else
-      writeln(unicodeformat('[WARNING] Cannot find directory "%s"', [ltargetdir]));
+      writeln(unicodeformat('[WARNING] Directory not found: "%s"', [ltargetdir]));
     
     inc(i);
   until i > high(cdesktopnames); 
@@ -213,11 +213,11 @@ begin
   if DirectoryExists(ltargetdir) then
   begin
     lcmd := unicodeformat('cp -f %s %s', [lfilename, ltargetdir + '/' + linstall + '.desktop']);
-    llog.Append(unicodeformat('[DEBUG] lcmd       = "%s"', [lcmd]));
+    llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
     if caction then
       execwaitmse(lcmd);
   end else
-    writeln(unicodeformat('[WARNING] Cannot find directory "%s"', [ltargetdir]));
+    writeln(unicodeformat('[WARNING] Directory not found: "%s"', [ltargetdir]));
 end;
 
 procedure CreateShortcutsWin;

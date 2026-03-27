@@ -29,6 +29,9 @@ Par défaut le dossier est créé dans le répertoire courant.
 ## Compilation
 
 ```Bash
+git clone https://github.com/rchastain2/installmse.git
+cd installmse
+git clone https://github.com/mse-org/mseide-msegui.git
 make
 ```
 

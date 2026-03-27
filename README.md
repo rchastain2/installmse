@@ -29,6 +29,9 @@ If the location is not specified, the folder *mseide-xxxxxxxxxx* is created in t
 ## Compilation
 
 ```Bash
+git clone https://github.com/rchastain2/installmse.git
+cd installmse
+git clone https://github.com/mse-org/mseide-msegui.git
 make
 ```
 
