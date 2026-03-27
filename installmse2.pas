@@ -24,13 +24,14 @@ uses
 
 type
   TInstallMSE = class
-    constructor Create;
+    constructor Create(const action: boolean);
     destructor Destroy; override;
     procedure Execute;
   strict private
     flog: TLog;
     finstall: msestring;
     fparentdir, fmsedir: filenamety;
+    faction: boolean;
     procedure Shell(const cmd: msestring);
     procedure Init;
     procedure Clone;
@@ -81,20 +82,20 @@ end;
 (* -------------------------------------------------------------------------- *)
 
 const
-  caction = {$IFDEF release}true{$ELSE}false{$ENDIF};
   cext = {$IFDEF mswindows}'.cmd'{$ELSE}'.sh'{$ENDIF};
   cexe = {$IFDEF mswindows}'cmd /C '{$ELSE}'sh '{$ENDIF};
 
-constructor TInstallMSE.Create;
+constructor TInstallMSE.Create(const action: boolean);
 const
   capp = 'InstallMSE 0.5';
   cbuild = 'FPC ' + {$I %FPCVERSION%} + ' ' + {$I %DATE%} + ' ' + {$I %TIME%} + ' ' + {$I %FPCTARGETOS%} + '-' + {$I %FPCTARGETCPU%};
   cactionstr: array[boolean] of msestring = ('SIMULATION', 'ACTION');
 begin
   inherited Create;
-  writeln(capp + ' (' + cbuild + ')');
-  writeln('[INFO] Mode ' + cactionstr[caction]);
   flog := TLog.Create({clog}tosysfilepath(replacefileext(sys_getapplicationpath, 'log')));
+  faction := action;
+  writeln(capp + ' (' + cbuild + ')');
+  writeln('[INFO] Mode ' + cactionstr[faction]);
 end;
 
 destructor TInstallMSE.Destroy;
@@ -109,7 +110,7 @@ var
   lresult: integer;
 begin
   flog.Append(unicodeformat('Shell(%s)', [cmd]));
-  if caction then
+  if faction then
   begin
     lresult := execwaitmse(cmd);
     flog.Append(unicodeformat('lresult: %d', [lresult]));
@@ -274,7 +275,7 @@ var
   linstall: TInstallMSE;
   
 begin
-  linstall := TInstallMSE.Create;
+  linstall := TInstallMSE.Create({$IFDEF release}true{$ELSE}false{$ENDIF});
   linstall.Execute;
   linstall.Free;
 end.
