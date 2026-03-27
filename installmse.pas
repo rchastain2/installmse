@@ -23,11 +23,11 @@ uses
   log;
 
 const
-  capp = 'InstallMSE 0.3';
+  capp = 'InstallMSE 0.4';
   clog = 'installmse.log';
   ctargetos = {$IFDEF mswindows}'windows'{$ELSE}'linux'{$ENDIF};
   cpathdelim = {$IFDEF mswindows}'\'{$ELSE}'/'{$ENDIF};
-  
+
 var
   llog: TLog;
   

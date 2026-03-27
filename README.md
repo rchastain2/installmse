@@ -1,13 +1,14 @@
 # InstallMSE
 
-Simple program who installs *MSEide*, that is:
+*MSEide* command-line installer designed for multiple installations.
 
-- clones *MSEide+MSEgui* *git* repository,
-- builds *MSEide*,
-- configures *MSEide*,
-- create start script and desktop shortcuts.
+The installation involves:
 
-The start script and the desktop shortcuts are created with **--globstatfile** option (so that each *MSEide* binary installed use its own configuration file).
+1. cloning *MSEide+MSEgui* *git* repository
+2. building *MSEide*
+3. configuring *MSEide*
+4. creating start script
+5. creating desktop shortcuts (Linux)
 
 ## Usage
 
@@ -23,7 +24,7 @@ Example:
 ./installmse --dir=/home/roland/Applications
 ```
 
-If the location is not specified, the folder is created in the current directory.
+If the location is not specified, the folder *mseide-xxxxxxxxxx* is created in the current directory.
 
 ## Compilation
 
@@ -31,56 +32,10 @@ If the location is not specified, the folder is created in the current directory
 make
 ```
 
-By default the program is compiled in passive mode. (It will create the scripts but won't execute any command.)
+By default the program is compiled in passive mode. (It creates build and start scripts but doesn't launch commands.)
 
-To build in active mode:
+Build in active mode:
 
 ```Bash
 make RELEASE=1
-```
-
-## Test
-
-To test the program:
-
-```Bash
-LC_ALL=C make distclean && make test
-```
-
-```
-removed 'mseide-2603221717.desktop'
-removed 'desktopfile.o'
-removed 'installmse.o'
-removed 'readversion.o'
-removed 'desktopfile.ppu'
-removed 'readversion.ppu'
-removed 'build-mseide-2603221717.sh'
-removed 'start-mseide-2603221717.sh'
-removed 'installmse'
-Free Pascal Compiler version 3.2.2 [2023/03/05] for x86_64
-Copyright (c) 1993-2021 by Florian Klaempfl and others
-Target OS: Linux for x86-64
-Compiling installmse.pas
-Compiling desktopfile.pas
-Compiling readversion.pas
-installmse.pas(111,5) Warning: unreachable code
-installmse.pas(128,5) Warning: unreachable code
-installmse.pas(148,5) Warning: unreachable code
-installmse.pas(186,9) Warning: unreachable code
-installmse.pas(200,7) Warning: unreachable code
-Linking installmse
-320 lines compiled, 0.8 sec
-5 warning(s) issued
-./installmse --dir=/home/roland/Applications 2> installmse.debug
-MSEinstall 0.2 (FPC 3.2.2 2026/03/22 17:18:15 Linux-x86_64)
-[INFO] Mode SIMULATION
-[INFO] Check command-line
-[INFO] Set variables
-[INFO] Clone repository
-[INFO] Create script to build MSEide
-[INFO] Build MSEide
-[INFO] Create script to start MSEide
-[INFO] Configure MSEide
-[WARNING] Cannot find directory "/home/roland/Bureau"
-[INFO] Done
 ```
