@@ -65,24 +65,30 @@ end;
 (* -------------------------------------------------------------------------- *)
 
 const
-  caction = {$IFDEF release}true{$ELSE}false{$ENDIF};
   cext = {$IFDEF mswindows}'.cmd'{$ELSE}'.sh'{$ENDIF};
   cexe = {$IFDEF mswindows}'cmd /C '{$ELSE}'sh '{$ENDIF};
   
 var
   linstall: msestring;
   lparentdir, lmsedir: filenamety;
-
+  laction: boolean;
+  
 procedure Shell(const cmd: msestring);
 var
   lresult: integer;
 begin
   llog.Append(unicodeformat('Shell(%s)', [cmd]));
-  if caction then
+  if laction then
   begin
     lresult := execwaitmse(cmd);
     llog.Append(unicodeformat('lresult: %d', [lresult]));
-  end;
+    if lresult = -1 then
+    begin
+      writeln('[ERROR] Execution failed, switch to simulation mode');
+      laction := false;
+    end;
+  end else
+    writeln('[WARNING] Simulation mode, command not executed');
 end;
 
 procedure Hello;
@@ -91,7 +97,7 @@ const
   cactionstr: array[boolean] of msestring = ('SIMULATION', 'ACTION');
 begin
   writeln(capp + ' (' + cbuild + ')');
-  writeln('[INFO] Mode ' + cactionstr[caction]);
+  writeln('[INFO] Mode ' + cactionstr[laction]);
   llog := TLog.Create(tosysfilepath(replacefileext(sys_getapplicationpath, 'log')));
 end;
 
@@ -246,6 +252,8 @@ begin
 end;
 
 begin
+  laction := {$IFDEF release}true{$ELSE}false{$ENDIF};
+  
   Hello;
   Init;
   Clone;
