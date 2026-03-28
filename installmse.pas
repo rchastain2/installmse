@@ -91,17 +91,10 @@ begin
     writeln('[WARNING] Simulation mode, command not executed');
 end;
 
-procedure Hello;
+procedure Init(const aaction: boolean);
 const
   cbuild = 'FPC ' + {$I %FPCVERSION%} + ' ' + {$I %DATE%} + ' ' + {$I %TIME%} + ' ' + {$I %FPCTARGETOS%} + '-' + {$I %FPCTARGETCPU%};
   cactionstr: array[boolean] of msestring = ('SIMULATION', 'ACTION');
-begin
-  writeln(capp + ' (' + cbuild + ')');
-  writeln('[INFO] Mode ' + cactionstr[laction]);
-  llog := TLog.Create(tosysfilepath(replacefileext(sys_getapplicationpath, 'log')));
-end;
-
-procedure Init;
 const
   copt = '--DIR='; { Second paramètre de la fonction mseStrLIComp. Doit être en majuscules. }
   cfmt = 'YYMMDDhhnn';
@@ -110,6 +103,12 @@ var
   ltimestamp: msestring;
   i: integer;
 begin
+  laction := aaction;
+  
+  writeln(capp + ' (' + cbuild + ')');
+  writeln('[INFO] Mode ' + cactionstr[laction]);
+  llog := TLog.Create(tosysfilepath(replacefileext(sys_getapplicationpath, 'log')));
+  
 { Emplacement par défaut pour l'installation }
   lparentdir := tosysfilepath(sys_getcurrentdir);
   
@@ -245,17 +244,14 @@ procedure CreateShortcutsWin;
 begin
 end;
 
-procedure GoodBye;
+procedure Destroy;
 begin
   writeln('[INFO] Done');
   llog.Free;
 end;
 
 begin
-  laction := {$IFDEF release}true{$ELSE}false{$ENDIF};
-  
-  Hello;
-  Init;
+  Init({$IFDEF release}true{$ELSE}false{$ENDIF});
   Clone;
   Build;
   Configure;
@@ -264,5 +260,5 @@ begin
 {$ELSE}
   CreateShortcuts;
 {$ENDIF}
-  GoodBye;
+  Destroy;
 end.
