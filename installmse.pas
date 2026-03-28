@@ -149,13 +149,14 @@ var
   lfilename, lfilename2: filenamety;
   lcmd: msestring;
 begin
-{ Compilation de MSEide }
+{ Création du script pour compiler MSEide }
   writeln('[INFO] Creating build script');
   lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'build-' + linstall + cext;
   lfilename2 := tosysfilepath(filedir(sys_getapplicationpath) + 'build-' + linstall + cext);
   llog.Append(unicodeformat('lfilename:%s  "%s"', [LineEnding, lfilename]));
   llog.Append(unicodeformat('lfilename2:%s  "%s"', [LineEnding, lfilename2]));
   createbuildscript(lfilename, lmsedir);
+{ Compilation de MSEide }
   writeln('[INFO] Building MSEide');
   lcmd := cexe + lfilename;
   llog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
@@ -167,15 +168,12 @@ var
   lfilename: filenamety;
   lcmd, lcmd2: msestring;
 begin
-{ Configuration de MSEide }
-
+{ Création du script pour lancer MSEide }
   writeln('[INFO] Creating start script');
-  
   lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'start-' + linstall + cext;
   createstartscript(lfilename, lmsedir);
-
+{ Configuration de MSEide }
   writeln('[INFO] Configuring MSEide');
-  
   lcmd := UnicodeFormat(
     cexe + '%s --macrodef=MSEDIR,%s --storeglobalmacros',
     [lfilename, lmsedir + cpathdelim]
