@@ -194,10 +194,13 @@ const
 var
   lfilename, ltargetdir: filenamety;
   lmseidever, lmseguiver: string;
-  lcmd: msestring;
+  lcmd, lmsedirexp: msestring;
   i: integer;
 begin
-  readmseversion(stringtoutf8(lmsedir), lmseidever, lmseguiver);
+{ Expansion }
+  lmsedirexp := filepath(lmsedir);
+  
+  readmseversion(stringtoutf8(lmsedirexp), lmseidever, lmseguiver);
   llog.Append(unicodeformat('lmseidever:%s  "%s"', [LineEnding, lmseidever]));
   
   lfilename := extractfilepath(sys_getapplicationpath) + linstall + '.desktop';
@@ -205,9 +208,9 @@ begin
   createdesktopfile(
     lfilename,
     unicodeformat('MSEide %s', [lmseidever]),
-    unicodeformat('%s/apps/ide/mseide --globstatfile=%s/apps/ide/mseide.sta %%F', [lmsedir, lmsedir]),
-    unicodeformat('%s/msegui_48.png', [lmsedir]),
-    unicodeformat('%s/apps/ide', [lmsedir])
+    unicodeformat('%s/apps/ide/mseide --globstatfile=%s/apps/ide/mseide.sta %%F', [lmsedirexp, lmsedirexp]),
+    unicodeformat('%s/msegui_48.png', [lmsedirexp]),
+    unicodeformat('%s/apps/ide', [lmsedirexp])
   );
   
   lcmd := unicodeformat('chmod +x %s', [lfilename]);

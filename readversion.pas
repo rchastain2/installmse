@@ -54,8 +54,8 @@ procedure readmseversion(const amsedir: tfilename; out amseideversion, amseguive
   lib/common/kernel/msegui.pas:37: mseguiversiontext = '4.6.3';
 }
 begin
-  amseideversion := readconstantvalue(IncludeTrailingPathDelimiter(amsedir) + 'apps/ide/main.pas', 'versiontext', '\d+\.\d+\.\d+');
-  amseguiversion := readconstantvalue(IncludeTrailingPathDelimiter(amsedir) + 'lib/common/kernel/msegui.pas', 'mseguiversiontext', '\d+\.\d+\.\d+');
+  amseideversion := readconstantvalue(IncludeTrailingPathDelimiter(ExpandFileName(amsedir)) + 'apps/ide/main.pas', 'versiontext', '\d+\.\d+\.\d+');
+  amseguiversion := readconstantvalue(IncludeTrailingPathDelimiter(ExpandFileName(amsedir)) + 'lib/common/kernel/msegui.pas', 'mseguiversiontext', '\d+\.\d+\.\d+');
 end;
 
 end.
