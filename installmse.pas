@@ -23,7 +23,6 @@ uses
   log;
 
 const
-  capp = 'InstallMSE 0.5';
   ctargetos = {$IFDEF mswindows}'windows'{$ELSE}'linux'{$ENDIF};
   cpathdelim = {$IFDEF mswindows}'\'{$ELSE}'/'{$ENDIF};
 
@@ -43,7 +42,7 @@ begin
   lstream.writeln('-Fu../../lib/common/kernel ' + clinebreak);
   lstream.writeln('-Fi../../lib/common/kernel ' + clinebreak);
   lstream.writeln('-Fu../../lib/common/kernel/' + ctargetos + ' ' + clinebreak);
-  lstream.writeln('-Mobjfpc -Sh mseide.pas');
+  lstream.writeln('-Mobjfpc -Sh mseide.pas -v0');
   lstream.close;
   lstream.free;
 end;
@@ -93,26 +92,24 @@ end;
 
 procedure Init(const aaction: boolean);
 const
+  capp = 'InstallMSE 0.5';
   cbuild = 'FPC ' + {$I %FPCVERSION%} + ' ' + {$I %DATE%} + ' ' + {$I %TIME%} + ' ' + {$I %FPCTARGETOS%} + '-' + {$I %FPCTARGETCPU%};
-  cactionstr: array[boolean] of msestring = ('SIMULATION', 'ACTION');
+  cactionstr: array[boolean] of msestring = ('PASSIVE', 'ACTIVE');
 const
   copt = '--DIR='; { Second paramètre de la fonction mseStrLIComp. Doit être en majuscules. }
   cfmt = 'YYMMDDhhnn';
 var
   larg: msestringarty;
-  ltimestamp: msestring;
+  ltimestamp, lcmd: msestring;
   i: integer;
 begin
   laction := aaction;
-  
   writeln(capp + ' (' + cbuild + ')');
   writeln('[INFO] Mode ' + cactionstr[laction]);
   llog := TLog.Create(tosysfilepath(replacefileext(sys_getapplicationpath, 'log')));
-  
-{ Emplacement par défaut pour l'installation }
+{ Emplacement par défaut }
   lparentdir := tosysfilepath(sys_getcurrentdir);
-  
-{ Vérification de la ligne de commande }
+{ Emplacement spécifié dans la ligne de commande }
   writeln('[INFO] Checking command-line');
   larg := getcommandlinearguments;
   for i := 1 to high(larg) do
@@ -121,13 +118,17 @@ begin
     if msestrlicomp(pmsechar(larg[i]), pmsechar(copt), length(copt)) = 0 then
       lparentdir := copy(larg[i], length(copt) + 1, msetypes.bigint);
   end;
-  
-{ Réglage des autres variables }
+{ Initialisation des autres variables }
   writeln('[INFO] Setting variables');
   ltimestamp := utf8tostring(FormatDateTime(cfmt, Now));
   linstall := 'mseide-' + ltimestamp;
   lmsedir := lparentdir + cpathdelim + linstall;
   llog.Append(unicodeformat('lmsedir:%s  "%s"', [LineEnding, lmsedir]));
+{ Vérification des dépendances }
+  writeln('[INFO] Checking dependencies 1/2');
+  Shell('git --version');
+  writeln('[INFO] Checking dependencies 2/2');
+  Shell('fpc -iW');
 end;
 
 procedure Clone;
