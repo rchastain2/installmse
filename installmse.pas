@@ -190,7 +190,10 @@ end;
 
 procedure CreateShortcuts;
 const
-  cdesktopnames: array[0..1] of msestring = ('Bureau', 'Desktop');
+  cdesktopnames: array[0..1] of msestring = (
+    'Bureau',
+    'Desktop'
+  );
 var
   lfilename, ltargetdir: filenamety;
   lmseidever, lmseguiver: string;

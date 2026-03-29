@@ -60,7 +60,7 @@ begin
   lstream.writeln('-Fu../../lib/common/kernel ' + clinebreak);
   lstream.writeln('-Fi../../lib/common/kernel ' + clinebreak);
   lstream.writeln('-Fu../../lib/common/kernel/' + ctargetos + ' ' + clinebreak);
-  lstream.writeln('-Mobjfpc -Sh mseide.pas');
+  lstream.writeln('-Mobjfpc -Sh mseide.pas -v0');
   lstream.close;
   lstream.free;
 end;
@@ -114,7 +114,13 @@ begin
   begin
     lresult := execwaitmse(cmd);
     flog.Append(unicodeformat('lresult: %d', [lresult]));
-  end;
+    if lresult = -1 then
+    begin
+      writeln('[ERROR] Execution failed, switch to simulation mode');
+      faction := false;
+    end;
+  end else
+    writeln('[WARNING] Simulation mode, command not executed');
 end;
 
 procedure TInstallMSE.Init;
@@ -126,8 +132,9 @@ var
   ltimestamp: msestring;
   i: integer;
 begin
+{ Emplacement par défaut }
   fparentdir := tosysfilepath(sys_getcurrentdir);
-  
+{ Emplacement spécifié dans la ligne de commande }
   writeln('[INFO] Checking command-line');
   larg := getcommandlinearguments;
   for i := 1 to high(larg) do
@@ -136,12 +143,17 @@ begin
     if msestrlicomp(pmsechar(larg[i]), pmsechar(copt), length(copt)) = 0 then
       fparentdir := copy(larg[i], length(copt) + 1, msetypes.bigint);
   end;
-  
+{ Initialisation des autres variables }
   writeln('[INFO] Setting variables');
   ltimestamp := utf8tostring(FormatDateTime(cfmt, Now));
   finstall := 'mseide-' + ltimestamp;
   fmsedir := fparentdir + cpathdelim + finstall;
   flog.Append(unicodeformat('fmsedir:%s  "%s"', [LineEnding, fmsedir]));
+{ Vérification des dépendances }
+  writeln('[INFO] Checking dependencies 1/2');
+  Shell('git --version');
+  writeln('[INFO] Checking dependencies 2/2');
+  Shell('fpc -iW');
 end;
 
 procedure TInstallMSE.Clone;
@@ -163,13 +175,14 @@ var
   lfilename, lfilename2: filenamety;
   lcmd: msestring;
 begin
-{ Compilation de MSEide }
+{ Création du script pour compiler MSEide }
   writeln('[INFO] Creating build script');
   lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'build-' + finstall + cext;
   lfilename2 := tosysfilepath(filedir(sys_getapplicationpath) + 'build-' + finstall + cext);
   flog.Append(unicodeformat('lfilename:%s  "%s"', [LineEnding, lfilename]));
   flog.Append(unicodeformat('lfilename2:%s  "%s"', [LineEnding, lfilename2]));
   createbuildscript(lfilename, fmsedir);
+{ Compilation de MSEide }
   writeln('[INFO] Building MSEide');
   lcmd := cexe + lfilename;
   flog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
@@ -181,15 +194,12 @@ var
   lfilename: filenamety;
   lcmd, lcmd2: msestring;
 begin
-{ Configuration de MSEide }
-
+{ Création du script pour lancer MSEide }
   writeln('[INFO] Creating start script');
-  
   lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'start-' + finstall + cext;
   createstartscript(lfilename, fmsedir);
-
+{ Configuration de MSEide }
   writeln('[INFO] Configuring MSEide');
-  
   lcmd := UnicodeFormat(
     cexe + '%s --macrodef=MSEDIR,%s --storeglobalmacros',
     [lfilename, fmsedir + cpathdelim]
@@ -205,14 +215,19 @@ end;
 
 procedure TInstallMSE.CreateShortcuts;
 const
-  cdesktopnames: array[0..1] of msestring = ('Bureau', 'Desktop');
+  cdesktopnames: array[0..1] of msestring = (
+    'Bureau',
+    'Desktop'
+  );
 var
   lfilename, ltargetdir: filenamety;
   lmseidever, lmseguiver: string;
-  lcmd: msestring;
+  lcmd, lmsedirexp: msestring;
   i: integer;
 begin
-  readmseversion(stringtoutf8(fmsedir), lmseidever, lmseguiver);
+{ Expansion }
+  lmsedirexp := filepath(fmsedir);
+  readmseversion(stringtoutf8(lmsedirexp), lmseidever, lmseguiver);
   flog.Append(unicodeformat('lmseidever:%s  "%s"', [LineEnding, lmseidever]));
   
   lfilename := extractfilepath(sys_getapplicationpath) + finstall + '.desktop';
@@ -220,9 +235,9 @@ begin
   createdesktopfile(
     lfilename,
     unicodeformat('MSEide %s', [lmseidever]),
-    unicodeformat('%s/apps/ide/mseide --globstatfile=%s/apps/ide/mseide.sta %%F', [fmsedir, fmsedir]),
-    unicodeformat('%s/msegui_48.png', [fmsedir]),
-    unicodeformat('%s/apps/ide', [fmsedir])
+    unicodeformat('%s/apps/ide/mseide --globstatfile=%s/apps/ide/mseide.sta %%F', [lmsedirexp, lmsedirexp]),
+    unicodeformat('%s/msegui_48.png', [lmsedirexp]),
+    unicodeformat('%s/apps/ide', [lmsedirexp])
   );
   
   lcmd := unicodeformat('chmod +x %s', [lfilename]);

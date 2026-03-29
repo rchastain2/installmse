@@ -36,7 +36,7 @@ $(UNITS):
 
 clean:
 	@rm -fv *.bak *.bak? *.cmd *.desktop *.sh *.sta
-	@rm -fv $(UNITS)/*.o $(UNITS)/*.ppu
 
 distclean: clean
+	@rm -fv $(UNITS)/*.o $(UNITS)/*.ppu
 	@rm -fv $(PROGRAM) $(PROGRAM).dbg $(PROGRAM).exe
