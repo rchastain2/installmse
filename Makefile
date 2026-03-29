@@ -19,6 +19,7 @@ PFLAGS += -FU$(UNITS)
 
 ifdef RELEASE
 PFLAGS += -dRELEASE
+PFLAGS += -XX -Xs -CX -B
 endif
 
 PROGRAM := installmse
