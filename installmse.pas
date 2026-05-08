@@ -133,8 +133,8 @@ end;
 
 procedure Clone;
 const
-  curl = 'https://codeberg.org/mse-org/mseide-msegui.git';
-  //curl = 'https://github.com/mse-org/mseide-msegui.git';
+ {curl = 'https://codeberg.org/mse-org/mseide-msegui.git';}
+  curl = 'https://github.com/mse-org/mseide-msegui.git';
 var
   lcmd: msestring;
 begin
@@ -147,15 +147,13 @@ end;
 
 procedure Build;
 var
-  lfilename, lfilename2: filenamety;
+  lfilename: filenamety;
   lcmd: msestring;
 begin
 { Création du script pour compiler MSEide }
   writeln('[INFO] Creating build script');
-  lfilename := extractfilepath(tosysfilepath(sys_getapplicationpath)) + 'build-' + linstall + cext;
-  lfilename2 := tosysfilepath(filedir(sys_getapplicationpath) + 'build-' + linstall + cext);
+  lfilename := tosysfilepath(filedir(sys_getapplicationpath) + 'build-' + linstall + cext);
   llog.Append(unicodeformat('lfilename:%s  "%s"', [LineEnding, lfilename]));
-  llog.Append(unicodeformat('lfilename2:%s  "%s"', [LineEnding, lfilename2]));
   createbuildscript(lfilename, lmsedir);
 { Compilation de MSEide }
   writeln('[INFO] Building MSEide');

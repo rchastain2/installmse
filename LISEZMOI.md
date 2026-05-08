@@ -21,7 +21,7 @@ Où **DIR** est l'emplacement du dossier *mseide-xxxxxxxxxx*.
 Exemple :
 
 ```Bash
-./installmse --dir=/home/roland/Applications 2> installmse.debug
+./installmse --dir=~/Applications
 ```
 
 Par défaut le dossier est créé dans le répertoire courant.

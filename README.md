@@ -21,7 +21,7 @@ Where **DIR** is the location of the folder *mseide-xxxxxxxxxx*.
 Example:
 
 ```Bash
-./installmse --dir=/home/roland/Applications
+./installmse --dir=~/Applications
 ```
 
 If the location is not specified, the folder *mseide-xxxxxxxxxx* is created in the current directory.
