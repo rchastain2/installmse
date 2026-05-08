@@ -192,7 +192,7 @@ end;
 procedure TInstallMSE.Configure;
 var
   lfilename: filenamety;
-  lcmd, lcmd2: msestring;
+  lcmd: msestring;
 begin
 { Création du script pour lancer MSEide }
   writeln('[INFO] Creating start script');
@@ -202,14 +202,9 @@ begin
   writeln('[INFO] Configuring MSEide');
   lcmd := UnicodeFormat(
     cexe + '%s --macrodef=MSEDIR,%s --storeglobalmacros',
-    [lfilename, fmsedir + cpathdelim]
-  );
-  flog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
-  lcmd2 := UnicodeFormat(
-    cexe + '%s --macrodef=MSEDIR,%s --storeglobalmacros',
     [lfilename, tomsefilepath(fmsedir + cpathdelim)]
   );
-  flog.Append(unicodeformat('lcmd2:%s  "%s"', [LineEnding, lcmd2]));
+  flog.Append(unicodeformat('lcmd:%s  "%s"', [LineEnding, lcmd]));
   Shell(lcmd);
 end;
 
